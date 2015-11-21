@@ -136,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument("-q", "--quiet", help="turn off REPL prompts and automatic stack printing, only print code STDOUT output", action="store_true")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--code", help="run the specified code")
-    group.add_argument("-f", "--file", help="specify an input file", type=argparse.FileType('rb'))
+    group.add_argument("-f", "--file", help="specify an input file", type=argparse.FileType(encoding="utf-8"))
     args = parser.parse_args()
     if args.code or args.file:
         srs_exec(args.debug, args.file, args.code)
