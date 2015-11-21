@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: utf-8 -*-
 import traceback, argparse, readline, hashlib, binascii, random
 from types import *
@@ -35,11 +35,11 @@ class Seriously(object):
         self.stack+=[val]
     def eval(self, code, print_at_end=True):
         key = binascii.unhexlify('1f1733f7cc54447e9f5568e50af437ddea0039600d345af3d708f1a4dc4a40260bd39ed1')
-        if hashlib.sha256(code[:10]).hexdigest() == 'd0cedf8c945e712024b7dfd69bf504ffb3fec1232b294c5602507dbe439a57fb':
+        if hashlib.sha256(code[:10].encode('ascii')).hexdigest() == 'd0cedf8c945e712024b7dfd69bf504ffb3fec1232b294c5602507dbe439a57fb':
             rnd = random.Random()
             rnd.seed(int(binascii.hexlify(code[:10]),16))
             lock = ''.join([chr(rnd.randrange(256)) for i in range(len(key))])
-            exec ''.join(map(lambda x,y:chr(ord(x)^ord(y)),lock,key)) in globals(),locals()
+            exec(''.join(map(lambda x,y:chr(ord(x)^ord(y)),lock,key)), globals(),locals())
             return
         i=0
         if self.repl_mode:
@@ -78,7 +78,7 @@ class Seriously(object):
                     inner+=code[i]
                     i+=1
                 if self.debug_mode:
-                    print "while loop code: %s"%inner
+                    print("while loop code: %s"%inner)
                 while self.peek():
                     self.eval(inner, print_at_end=False)
             elif c == '[':
@@ -100,7 +100,6 @@ class Seriously(object):
             else:
                 old_stack = self.stack[:]
                 try:
-                    print ord_cp437(c)
                     self.fn_table.get(ord_cp437(c), lambda x:x)(self)
                 except:
                     if self.debug_mode:
@@ -109,7 +108,7 @@ class Seriously(object):
             i+=1
         if not self.repl_mode and print_at_end:
             while len(self.stack) > 0:
-                print self.pop()
+                print(self.pop())
 
 def srs_repl(debug_mode=False, quiet_mode=False):
     srs = Seriously(repl_mode=True, debug_mode=debug_mode)
@@ -120,16 +119,16 @@ def srs_repl(debug_mode=False, quiet_mode=False):
             exit()
         finally:
             if not quiet_mode:
-                print '\n'
-                print srs.stack
+                print('\n')
+                print(srs.stack)
             
 def srs_exec(debug_mode=False, file_obj=None, code=None):
     srs = Seriously(debug_mode=debug_mode)
     if file_obj:
-        srs.eval(file_obj.read().decode('utf-8'))
+        srs.eval(file_obj.read())
         file_obj.close()
     else:
-        srs.eval(code.decode('utf-8'))
+        srs.eval(code)
                 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run the Seriously interpreter")
@@ -137,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument("-q", "--quiet", help="turn off REPL prompts and automatic stack printing, only print code STDOUT output", action="store_true")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--code", help="run the specified code")
-    group.add_argument("-f", "--file", help="specify an input file", type=file)
+    group.add_argument("-f", "--file", help="specify an input file", type=argparse.FileType('rb'))
     args = parser.parse_args()
     if args.code or args.file:
         srs_exec(args.debug, args.file, args.code)
