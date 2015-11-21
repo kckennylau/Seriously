@@ -30,7 +30,8 @@ class MathSelector(object):
 
 class Math(object):
     def __getattr__(self, fn):
-        return MathSelector(fn) if isinstance(getattr(cmath,fn),function) else getattr(rmath,fn)
+        mathmod = cmath if hasattr(cmath,fn) else rmath
+        return MathSelector(fn) if callable(getattr(mathmod,fn)) else getattr(rmath,fn)
         
 math = Math()
 
@@ -51,14 +52,15 @@ def NinetyNineBottles():
     res = ''
     for i in range(99):
         w = 'Take one down and pass it around, '+str((x-(i+1)))+' bottle{0} of beer on the wall.'.format(['s',''][x-i==2])
-        y = str((x-i))+' bottle{0} of beer on the wall, '+str((x-i))+' bottle{0} of beer'
+        y = str((x-i))+' bottle{0} of beer on the wall, '+str((x-i))+' bottle{0} of beer.'
         y=y.format(['s',''][x-i==1])
-        z = 'Go to the Store and buy some more, '+str(x)+' bottles of beer on the wall.'
+        z = 'Go to the store and buy some more, '+str(x)+' bottles of beer on the wall.'
         if i == (x-1):
             res += y + '\n' + z
         else:
             res += y + '\n' + w
         i += 1
+        res += '\n\n'
     return res
 
 def is_prime(x):
@@ -104,7 +106,7 @@ def div_fn(srs):
     a=srs.pop()
     if type(a) is ListType:
         srs.push(a[-1:]+a[:-1])
-    elif type(a) in [IntType, LongType]:
+    elif type(a) in [IntType, LongType, FloatType, ComplexType]:
         b=srs.pop()
         srs.push(a/b)
     else:
@@ -114,7 +116,7 @@ def idiv_fn(srs):
     a=srs.pop()
     if type(a) is ListType:
         srs.push(a[1:]+a[:1])
-    elif type(a) in [IntType,LongType]:
+    elif type(a) in [IntType,LongType,FloatType,ComplexType]:
         b=srs.pop()
         srs.push(a//b)
     else:
@@ -220,7 +222,7 @@ def dupe_each_fn(srs):
 def lr_fn(srs):
     a=srs.pop()
     if type(a) is StringType:
-        map(srs.push,a.split('')[::-1])
+        map(srs.push,a[::-1])
     elif type(a) in [IntType, LongType]:
         srs.push(range(a))
         
@@ -380,6 +382,41 @@ def while_fn(srs):
     while srs.peek():
         f(srs)
         
+def dupe_each_n_fn(srs):
+    a=srs.pop()
+    tmp = []
+    while srs.stack:
+        b = srs.pop()
+        tmp+=[b for i in range(a)]
+    srs.stack=tmp[:]
+    
+def S_fn(srs):
+    a=srs.pop()
+    if type(a) is StringType:
+        srs.push(''.join(sorted(a)))
+    elif type(a) is ListType:
+        srs.push(sorted(a))
+    else:
+        srs.push(math.sin(a))
+        
+def print_all_fn(srs):
+    while srs.stack:
+        print(srs.pop())
+        
+def zip_fn(srs):
+    a=srs.pop()
+    if type(a) in [ListType,StringType]:
+        b=srs.pop()
+        srs.push(map(list,[filter(lambda x:x is not None,zlist) for zlist in itertools.izip_longest(a,b)]))
+    else:
+        lists = [srs.pop() for i in range(a)]
+        srs.push(map(list,[filter(lambda x:x is not None,zlist) for zlist in itertools.izip_longest(*lists)]))
+        
+def sum_fn(srs):
+    a=srs.pop()
+    srs.push(sum(a,type(a[0])()))
+        
+        
 fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           32:lambda x:x.push(len(x.stack)),
           33:lambda x:x.push(math.factorial(x.pop())),
@@ -419,18 +456,18 @@ fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           80:lambda x:x.push(nth_prime(x.pop())),
           81:lambda x:x.push(x.code),
           82:r_fn,
-          83:lambda x:x.push(math.sin(x.pop())),
+          83:S_fn,
           84:lambda x:x.push(math.tan(x.pop())),
           85:lambda x:x.push(list(set(x.pop()).union(x.pop()))),
           86:lambda x:x.push(random.uniform(x.pop(),x.pop())),
           88:lambda x:x.pop(),
           89:lambda x:x.push(0 if x.pop() else 1),
-          90:lambda x:x.push(map(list,zip(x.pop(),x.pop()))),
+          90:zip_fn,
           92:idiv_fn,
           94:lambda x:x.push(pow(x.pop(),x.pop())),
           95:lambda x:x.push(math.log(x.pop())),
           97:invert_fn,
-          98:lambda x:x.push(int(bool(x))),
+          98:lambda x:x.push(int(bool(x.pop()))),
           99:lambda x:x.push(chr(x.pop()%256)),
           100:deq_fn,
           101:lambda x:x.push(math.exp(x.pop())),
@@ -447,7 +484,7 @@ fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           112:p_fn,
           113:enq_fn,
           114:lr_fn,
-          115:lambda x:x.push(math.sgn(x.pop())),
+          115:lambda x:x.push((lambda y:1 if y>0 else -1 if y<0 else 0)(x.pop())),
           116:flat_explode_fn,
           117:lambda x:x.push(x.pop()+1),
           118:lambda x:random.seed(x.pop()),
@@ -461,7 +498,7 @@ fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           126:lambda x:x.push(~x.pop()),
           127:lambda x:exit(),
           128:comp_fn,
-          129:lambda x:map(print,[x.pop() for _ in len(x.stack)]),
+          129:print_all_fn,
           130:lambda x:map(lambda y:x.pop(), range(len(x.stack))),
           131:lambda x:x.push(math.asin(x.pop())),
           132:lambda x:x.push(math.acos(x.pop())),
@@ -510,6 +547,7 @@ fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           180:lambda x:x.push(1 if gcd(x.pop(),x.pop())==1 else 0),
           186:lambda x:x.push((lambda y:y[len(y)//2] if len(y)%2 else sum(y[len(y)//2:len(y)//2+1])/2)(x.pop())),
           197:dupe_each_fn,
+          198:dupe_each_n_fn,
           199:npop_list_fn,
           203:lambda x:x.push(math.pi),
           204:lambda x:x.push(math.e),
@@ -522,8 +560,9 @@ fn_table={ 9:lambda x:x.push(sys.stdin.read(1)),
           222:lambda x:x.push(b64encode(x.pop())),
           226:lambda x:x.push(math.gamma(x.pop())),
           227:lambda x:x.push(reduce(operator.mul,x.pop(),1)),
-          228:lambda x:x.push(sum(x.pop())),
+          228:sum_fn,
           237:lambda x:x.push(phi),
+          238:lambda x:x.push(""),
           239:lambda x:x.push(list(set(x.pop()).intersection(x.pop()))),
           241:lambda x:x.push(-x.pop()),
           242:lambda x:x.push(x.pop()>=x.pop()),
