@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from flask import Flask, render_template, url_for, request
 from subprocess import Popen, PIPE, check_call
 import os, string

@@ -14,7 +14,7 @@ def serious_check(code, result, input='', errors=True):
     return output == result
     
 # I/O tests
-assert serious_check(r'	','a\n','a')
+assert serious_check('\t','a\n','a')
 assert serious_check(r',','a\n','"a"')
 assert serious_check(r',','12345\n','12345')
 assert serious_check(r',','[3, 2, 1]\n','[3,2,1]')
