@@ -7,7 +7,7 @@ import commands
 cp437table = ''.join(map(chr,range(128))) + u"ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ "
 
 def ord_cp437(c):
-    return cp437table.index(c)
+    return int(binascii.hexlify(c),16) if int(binascii.hexlify(c),16) in range(256) else -1
     
 def chr_cp437(o):
     return cp437table[o]
@@ -100,7 +100,11 @@ class Seriously(object):
             else:
                 old_stack = self.stack[:]
                 try:
+                    if self.debug_mode:
+                        print(binascii.hexlify(chr(ord_cp437(c))).upper())
                     self.fn_table.get(ord_cp437(c), lambda x:x)(self)
+                except SystemExit:
+                    exit()
                 except:
                     if self.debug_mode:
                         traceback.print_exc()
