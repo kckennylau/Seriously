@@ -96,7 +96,7 @@ var explanations = {
 '|':'pop a,b: push (a | b)',
 '}':'pop a: rotate stack left a times',
 '~':'pop a: push ~a (unary bitwise negate)',
-'\x7f':'terminate the program (without implicit stack popping and printing)',
+'\u2302':'terminate the program (without implicit stack popping and printing)',
 '\xc7':'pop a,b: push a+bi; pop [a]: pop pairs of real numerics b,c from [a] and push b+ci (appending 0 to [a] if len([a]) is odd)',
 '\xfc':'pop entire stack and print to stdout',
 '\xe9':'pop entire stack (clear stack)',
