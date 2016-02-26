@@ -10,4 +10,4 @@ i=0
 while i < len(s):
     r += chr(int(s[i:i+2],16))
     i+=2
-print r
+print(r)
